@@ -1,4 +1,4 @@
-# 🛠️ SIGTI - Sistema de Chamados de TI
+# 🛠️ SIGTI - Sistema de Chamados de TI (Em desenvolvimento)
 
 Sistema fullstack para gestão de chamados de suporte técnico.
 
