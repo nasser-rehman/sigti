@@ -21,11 +21,16 @@ Sistema fullstack para gestão de chamados de suporte técnico.
 - Listagem com regras por perfil
 
 ## ⚙️ Como rodar
+Atribuir os valores referentes as variáveis0 no arquivo .env da pasta ./backend
+DATABASE_URL = "your_database_url_here"
+JWT_SECRET=supersecretkeyhahaha
+JWT_EXPIRES_IN=1d
 
 ```bash
 npm install
 docker-compose up -d
 npx prisma migrate dev
+npx prisma generate
 npm run dev
 
 📌 Endpoints principais
