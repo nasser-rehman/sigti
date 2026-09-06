@@ -33,14 +33,14 @@ namespace SIGTI.Application.Tests.Features.Tickets.Commands.AddComment
             // Arrange
             var department = new DepartmentBuilder().Build();
             var queue = new SupportQueueBuilder().Build();
-            var createdBy = new UserBuilder()
+            var author = new UserBuilder()
                 .WithDepartment(department)
                 .WithEmail("user@sigti.local")
                 .Build();
             var ticket = new TicketBuilder()
                 .WithDepartment(department)
                 .WithQueue(queue)
-                .WithCreatedBy(createdBy)
+                .WithCreatedBy(author)
                 .Build();
 
             _entityReferenceServiceMock
@@ -55,15 +55,15 @@ namespace SIGTI.Application.Tests.Features.Tickets.Commands.AddComment
             _entityReferenceServiceMock
                 .Setup(s =>
                     s.GetRequiredUserAsync(
-                        createdBy.Id,
+                        author.Id,
                         It.IsAny<CancellationToken>()
                     )
                 )
-                .ReturnsAsync(createdBy);
+                .ReturnsAsync(author);
 
             var command = new AddCommentCommand(
                 ticket.Id,
-                createdBy.Id,
+                author.Id,
                 "Mensagem de atualização sobre o chamado."
             );
 
@@ -76,8 +76,8 @@ namespace SIGTI.Application.Tests.Features.Tickets.Commands.AddComment
             // Assert
             response.Should().NotBeNull();
             response.TicketId.Should().Be(ticket.Id);
-            response.CreatedById.Should().Be(createdBy.Id);
-            response.CreatedByName.Should().Be(createdBy.Name);
+            response.AuthorId.Should().Be(author.Id);
+            response.AuthorName.Should().Be(author.Name);
             response
                 .Content.Should()
                 .Be("Mensagem de atualização sobre o chamado.");
@@ -103,7 +103,7 @@ namespace SIGTI.Application.Tests.Features.Tickets.Commands.AddComment
             var createdBy = new UserBuilder()
                 .WithDepartment(department)
                 .WithEmail("user@sigti.local")
-                .Build();z
+                .Build();
             var technician = new UserBuilder()
                 .WithDepartment(department)
                 .WithEmail("tech@sigti.local")

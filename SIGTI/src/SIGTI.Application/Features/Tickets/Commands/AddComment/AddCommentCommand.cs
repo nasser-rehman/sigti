@@ -4,7 +4,7 @@ namespace SIGTI.Application.Features.Tickets.Commands.AddComment
 {
     public sealed record AddCommentCommand(
         Guid TicketId,
-        Guid CreatedById,
+        Guid AuthorId,
         string Content
     ) : IRequest<AddCommentResponse>;
 }

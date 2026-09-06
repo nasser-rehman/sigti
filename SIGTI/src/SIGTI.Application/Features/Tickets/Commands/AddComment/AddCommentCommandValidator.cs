@@ -11,7 +11,7 @@ namespace SIGTI.Application.Features.Tickets.Commands.AddComment
                 .NotEmpty()
                 .WithMessage("O identificador do ticket é obrigatório.");
 
-            RuleFor(x => x.CreatedById)
+            RuleFor(x => x.AuthorId)
                 .NotEmpty()
                 .WithMessage("O identificador do autor é obrigatório.");
 

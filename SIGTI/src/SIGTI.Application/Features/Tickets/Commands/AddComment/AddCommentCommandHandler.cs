@@ -30,7 +30,7 @@ namespace SIGTI.Application.Features.Tickets.Commands.AddComment
                 cancellationToken
             );
             var createdBy = await _entityReferenceService.GetRequiredUserAsync(
-                request.CreatedById,
+                request.AuthorId,
                 cancellationToken
             );
 

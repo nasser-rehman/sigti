@@ -8,6 +8,7 @@ using SIGTI.Application.Features.Tickets.Commands.DispatchTicket;
 using SIGTI.Application.Features.Tickets.Commands.ResolveTicket;
 using SIGTI.Application.Features.Tickets.Commands.StartTicketService;
 using SIGTI.Application.Features.Tickets.Queries.GetTicketById;
+using SIGTI.Application.Features.Tickets.Queries.ListTicketComments;
 using SIGTI.Application.Features.Tickets.Queries.ListTickets;
 
 namespace SIGTI.API.Controllers
@@ -134,6 +135,20 @@ namespace SIGTI.API.Controllers
                 new { id = response.TicketId },
                 response
             );
+        }
+
+        [HttpGet("{id:guid}/comments")]
+        public async Task<IActionResult> GetComments(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new ListTicketCommentsQuery(id),
+                cancellationToken
+            );
+
+            return Ok(response);
         }
     }
 }
