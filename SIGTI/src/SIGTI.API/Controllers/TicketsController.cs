@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Common.Exceptions;
 using SIGTI.Application.Features.Tickets.Commands.CreateTicket;
 using SIGTI.Application.Features.Tickets.Commands.DispatchTicket;
+using SIGTI.Application.Features.Tickets.Commands.ResolveTicket;
 using SIGTI.Application.Features.Tickets.Commands.StartTicketService;
 using SIGTI.Application.Features.Tickets.Queries.GetTicketById;
 using SIGTI.Application.Features.Tickets.Queries.ListTickets;
@@ -79,6 +80,20 @@ namespace SIGTI.API.Controllers
             );
 
             var response = await _sender.Send(command, cancellationToken);
+
+            return Ok(response);
+        }
+
+        [HttpPatch("{id:guid}/resolve")]
+        public async Task<IActionResult> Resolve(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken
+        )
+        {
+            var response = await _sender.Send(
+                new ResolveTicketCommand(id),
+                cancellationToken
+            );
 
             return Ok(response);
         }
