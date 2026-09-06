@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SIGTI.Application.Common.Exceptions;
+using SIGTI.Application.Features.Tickets.Commands.AddComment;
 using SIGTI.Application.Features.Tickets.Commands.CloseTicket;
 using SIGTI.Application.Features.Tickets.Commands.CreateTicket;
 using SIGTI.Application.Features.Tickets.Commands.DispatchTicket;
@@ -113,13 +114,26 @@ namespace SIGTI.API.Controllers
             return Ok(response);
         }
 
-        // ├── POST   /api/tickets
-        // ├── GET    /api/tickets/{id}
-        // ├── GET    /api/tickets
-        // ├── PATCH  /api/tickets/{id}/dispatch
-        // ├── PATCH  /api/tickets/{id}/start
-        // ├── PATCH  /api/tickets/{id}/resolve
-        // ├── PATCH  /api/tickets/{id}/close
-        // └── PATCH  /api/tickets/{id}/reopen
+        [HttpPost("{id:guid}/comments")]
+        public async Task<IActionResult> AddComment(
+            [FromRoute] Guid id,
+            [FromBody] AddCommentRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var command = new AddCommentCommand(
+                id,
+                request.CreatedById,
+                request.Content
+            );
+
+            var response = await _sender.Send(command, cancellationToken);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = response.TicketId },
+                response
+            );
+        }
     }
 }
