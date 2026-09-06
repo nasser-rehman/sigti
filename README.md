@@ -76,7 +76,11 @@ Exemplo de fluxo:
 
 ```text
 Commands (Escrita)
-└── CreateTicketCommand
+├── CreateTicketCommand
+├── DispatchTicketCommand
+├── StartTicketServiceCommand
+├── ResolveTicketCommand
+└── CloseTicketCommand
 
 Queries (Leitura)
 ├── GetTicketByIdQuery
@@ -131,7 +135,17 @@ Exemplo:
 ```csharp
 queue.AddMember(technician, maxConcurrentTickets);
 ticket.AssignTechnician(technician, assignedBy, "Motivo da atribuição");
+queue.AddMember(technician, maxConcurrentTickets);
+ticket.AssignTechnician(technician, assignedBy, "Motivo da atribuição");
+ticket.StartService();
+ticket.Resolve();
+ticket.Close();
 ```
+
+### Atribuição Inteligente (Strategy Pattern)
+O despacho de tickets suporta dois comportamentos:
+- **Atribuição manual:** quando um técnico específico é informado na requisição;
+- **Atribuição automática:** via `LowestUtilizationStrategy`, avaliando a taxa percentual de ocupação dos técnicos ativos na fila em relação aos seus limites de chamados simultâneos (`MaxConcurrentTickets`).
 
 ### CQRS e MediatR
 Separação clara entre operações de mutação de estado (Commands) e consultas otimizadas (Queries), mediadas pelo pipeline do MediatR que também orquestra os comportamentos transversais (como validação).
@@ -141,12 +155,40 @@ A persistência é abstraída, permitindo testabilidade e garantindo que as tran
 
 ---
 
+## Ciclo de Vida do Ticket
+
+O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centralizada na entidade `Ticket`:
+
+`New` -> `Dispatched` -> `InProgress` -> `Resolved` -> `Closed`
+
+- **Dispatch (`/dispatch`):** Permite despacho direto ou automático via fila (`LowestUtilizationStrategy`).
+- **Start (`/start`):** Transiciona para `InProgress`. Requer atribuição ativa.
+- **Resolve (`/resolve`):** Transiciona para `Resolved`. Válido a partir de `InProgress` ou `WaitingCustomer`.
+- **Close (`/close`):** Transiciona para `Closed`. Válido apenas a partir de `Resolved`.
+- **Estados Terminais:** Chamados no estado `Closed` são definitivos e não podem ser reabertos para preservar a integridade histórica de SLA e MTTR.
+
+### Endpoints de Ciclo de Vida
+
+- `POST /api/tickets` - Criação de chamado (`New`)
+- `GET /api/tickets/{id}` - Busca detalhada
+- `GET /api/tickets` - Listagem paginada
+- `PATCH /api/tickets/{id}/dispatch` - Despacho manual ou automático
+- `PATCH /api/tickets/{id}/start` - Início do atendimento (`InProgress`)
+- `PATCH /api/tickets/{id}/resolve` - Resolução técnica (`Resolved`)
+- `PATCH /api/tickets/{id}/close` - Fechamento terminal (`Closed`)
+
+---
+
 ## Funcionalidades implementadas
 
 ### Tickets
 - [x] Criar ticket;
 - [x] Geração automática e sequencial de número;
-- [x] Atribuição automática de técnico baseado na fila;
+- [x] Atribuição manual direta de técnico;
+- [x] Atribuição automática baseada em fila e taxa de utilização (`LowestUtilizationStrategy`);
+- [x] Iniciar atendimento (`InProgress`);
+- [x] Resolver ticket (`Resolved`);
+- [x] Fechar ticket (`Closed` como estado terminal);
 - [x] Buscar ticket por ID (carregamento de grafo de relacionamentos);
 - [x] Listar tickets;
 - [x] Paginação dinâmica (`PagedResult<T>`);
@@ -259,11 +301,12 @@ Na inicialização da aplicação, o `DatabaseSeeder` injeta dados essenciais pa
 ## Próximos passos
 
 - [x] Iniciar atendimento;
+- [x] Despacho manual e automático de tickets;
 - [x] Resolver ticket;
+- [x] Fechar ticket;
 - [x] Testes de Integração (Repositórios e Infraestrutura);
-- [ ] Assumir atendimento (manualmente);
-- [ ] Transferir ticket entre filas/departamentos;
-- [ ] Fechar e Reabrir ticket;
+- [ ] Adicionar comentários ao chamado (`AddCommentCommand`);
+- [ ] Transferir ticket entre filas/departamentos (`TransferTicketCommand`);
 - [ ] Histórico/Auditoria completa do ticket;
 - [ ] Autenticação e Autorização (JWT);
 - [ ] Gestão completa de Usuários, Departamentos e Filas;
