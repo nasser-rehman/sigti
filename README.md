@@ -135,8 +135,6 @@ Exemplo:
 ```csharp
 queue.AddMember(technician, maxConcurrentTickets);
 ticket.AssignTechnician(technician, assignedBy, "Motivo da atribuição");
-queue.AddMember(technician, maxConcurrentTickets);
-ticket.AssignTechnician(technician, assignedBy, "Motivo da atribuição");
 ticket.StartService();
 ticket.Resolve();
 ticket.Close();
