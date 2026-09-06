@@ -124,7 +124,7 @@ namespace SIGTI.API.Controllers
         {
             var command = new AddCommentCommand(
                 id,
-                request.CreatedById,
+                request.AuthorId,
                 request.Content
             );
 

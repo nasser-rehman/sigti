@@ -12,6 +12,8 @@ namespace SIGTI.Infrastructure.Persistence.Configurations
 
             builder.HasKey(x => x.Id);
 
+            builder.Property(x => x.Id).ValueGeneratedNever();
+
             builder.Property(x => x.Content).HasMaxLength(5000).IsRequired();
 
             builder.Property(x => x.TicketId).IsRequired();

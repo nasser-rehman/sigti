@@ -22,11 +22,15 @@ public static class DependencyInjection
         //DbContext
 
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            options.UseNpgsql(
+                configuration.GetConnectionString("DefaultConnection")
+            )
         );
 
         //Unit Of Work
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IUnitOfWork>(sp =>
+            sp.GetRequiredService<ApplicationDbContext>()
+        );
 
         //Repositories
         services.AddScoped<IUserRepository, UserRepository>();
