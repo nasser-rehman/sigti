@@ -41,6 +41,12 @@ namespace SIGTI.API.ExceptionHandlers
                     Status = StatusCodes.Status400BadRequest,
                     Detail = exception.Message,
                 },
+                UnauthorizedException => new ProblemDetails
+                {
+                    Title = "Não autorizado",
+                    Status = StatusCodes.Status401Unauthorized,
+                    Detail = exception.Message,
+                },
                 _ => null,
             };
 
@@ -50,14 +56,21 @@ namespace SIGTI.API.ExceptionHandlers
                 return false;
             }
 
-            _logger.LogWarning(exception, "Exceção tratada: {Message}", exception.Message);
+            _logger.LogWarning(
+                exception,
+                "Exceção tratada: {Message}",
+                exception.Message
+            );
 
             httpContext.Response.StatusCode =
                 problem.Status ?? StatusCodes.Status500InternalServerError;
 
             problem.Extensions["traceId"] = httpContext.TraceIdentifier;
 
-            await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
+            await httpContext.Response.WriteAsJsonAsync(
+                problem,
+                cancellationToken
+            );
 
             return true;
         }

@@ -3,6 +3,7 @@ using SIGTI.Domain.Enums;
 using SIGTI.Domain.Factories;
 using SIGTI.Domain.ValueObjects;
 using SIGTI.Infrastructure.Persistence.Context;
+using SIGTI.Infrastructure.Services;
 
 namespace SIGTI.Infrastructure.Persistence.Seed
 {
@@ -18,6 +19,8 @@ namespace SIGTI.Infrastructure.Persistence.Seed
             var departmentFactory = new DepartmentFactory();
             var supportQueueFactory = new SupportQueueFactory();
             var userFactory = new UserFactory();
+            var passwordHasher = new PasswordHasher();
+            var defaultPasswordHash = passwordHasher.Hash("Senha@123");
 
             var department = departmentFactory.Create(
                 "Tecnologia da Informação",
@@ -32,7 +35,7 @@ namespace SIGTI.Infrastructure.Persistence.Seed
             var systemUser = userFactory.CreateSystemUser(
                 "Sistema SIGTI",
                 new Email("sistema@sigti.local"),
-                "HASH_TEMPORARIO",
+                defaultPasswordHash,
                 Role.Administrator,
                 department
             );
@@ -40,7 +43,7 @@ namespace SIGTI.Infrastructure.Persistence.Seed
             var techUser = userFactory.Create(
                 "Nasser Ruiz Rehman",
                 new Email("nasser@sigti.local"),
-                "HASH_TEMPORARIO",
+                defaultPasswordHash,
                 Role.Technician,
                 department
             );

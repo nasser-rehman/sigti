@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SIGTI.Application.Common.Interfaces.Persistence;
 using SIGTI.Application.Common.Interfaces.Services;
 using SIGTI.Domain.Factories;
+using SIGTI.Infrastructure.Authentication;
 using SIGTI.Infrastructure.Persistence.Context;
 using SIGTI.Infrastructure.Persistence.Queries;
 using SIGTI.Infrastructure.Persistence.Repositories;
@@ -27,6 +28,11 @@ public static class DependencyInjection
             )
         );
 
+        // Options
+        services.Configure<JwtOptions>(
+            configuration.GetSection(JwtOptions.SectionName)
+        );
+
         //Unit Of Work
         services.AddScoped<IUnitOfWork>(sp =>
             sp.GetRequiredService<ApplicationDbContext>()
@@ -43,6 +49,10 @@ public static class DependencyInjection
 
         //Services
         services.AddScoped<ITicketNumberGenerator, TicketNumberGenerator>();
+
+        // Security Services
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         //Factories
         services.AddSingleton<TicketFactory>();
