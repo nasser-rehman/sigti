@@ -82,7 +82,7 @@ namespace SIGTI.Application.Features.Tickets.Commands.DispatchTicket
                 technician =
                     selectedMember.Technician
                     ?? await _entityReferenceService.GetRequiredUserAsync(
-                        selectedMember.Id,
+                        selectedMember.TechnicianId,
                         cancellationToken
                     );
             }

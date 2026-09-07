@@ -152,7 +152,7 @@ namespace SIGTI.API.Controllers
             return Ok(response);
         }
 
-        [HttpPatch("{id:guid/transfer}")]
+        [HttpPatch("{id:guid}/transfer")]
         public async Task<IActionResult> Transfer(
             [FromRoute] Guid id,
             [FromBody] TransferTicketRequest request,
