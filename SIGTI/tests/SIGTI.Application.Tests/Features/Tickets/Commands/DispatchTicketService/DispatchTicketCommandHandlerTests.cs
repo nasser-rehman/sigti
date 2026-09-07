@@ -119,7 +119,7 @@ namespace SIGTI.Application.Tests.Features.Tickets.Commands.DispatchTicketServic
                 strategy =>
                     strategy.SelectTechnician(
                         It.IsAny<SupportQueue>(),
-                        It.IsAny<IReadOnlyCollection<Ticket>>()
+                        It.IsAny<IReadOnlyDictionary<Guid, int>>()
                     ),
                 Times.Never
             );
@@ -197,7 +197,7 @@ namespace SIGTI.Application.Tests.Features.Tickets.Commands.DispatchTicketServic
                 .Setup(s =>
                     s.SelectTechnician(
                         queue,
-                        It.IsAny<IReadOnlyCollection<Ticket>>()
+                        It.IsAny<IReadOnlyDictionary<Guid, int>>()
                     )
                 )
                 .Returns(member);
@@ -239,7 +239,7 @@ namespace SIGTI.Application.Tests.Features.Tickets.Commands.DispatchTicketServic
                 s =>
                     s.SelectTechnician(
                         queue,
-                        It.IsAny<IReadOnlyCollection<Ticket>>()
+                        It.IsAny<IReadOnlyDictionary<Guid, int>>()
                     ),
                 Times.Once
             );

@@ -201,10 +201,8 @@ public class TicketTests
     [Fact]
     public void Should_Transfer_Queue()
     {
-        var ticket = new TicketBuilder().Build();
         var queue = new SupportQueueBuilder().Build();
-
-        ticket.TransferToQueue(queue);
+        var ticket = new TicketBuilder().WithQueue(queue).Build();
 
         ticket.QueueId.Should().Be(queue.Id);
     }

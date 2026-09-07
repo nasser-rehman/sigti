@@ -9,9 +9,15 @@ namespace SIGTI.Application.Common.Interfaces.Persistence
     {
         Task AddAsync(Ticket ticket, CancellationToken cancellationToken);
 
-        Task<Ticket?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<Ticket?> GetByIdAsync(
+            Guid id,
+            CancellationToken cancellationToken
+        );
 
-        Task<Ticket?> GetByNumberAsync(int number, CancellationToken cancellationToken);
+        Task<Ticket?> GetByNumberAsync(
+            int number,
+            CancellationToken cancellationToken
+        );
 
         // List all tickets created by a specific user
         Task<IReadOnlyCollection<Ticket>> ListCreatedByUserIdAsync(
@@ -30,7 +36,15 @@ namespace SIGTI.Application.Common.Interfaces.Persistence
             CancellationToken cancellationToken
         );
 
-        Task<Ticket?> GetDetailsByIdAsync(Guid ticketId, CancellationToken cancellationToken);
+        Task<Dictionary<Guid, int>> GetActiveTicketCountsByTechniciansAsync(
+            Guid queueId,
+            CancellationToken cancellationToken
+        );
+
+        Task<Ticket?> GetDetailsByIdAsync(
+            Guid ticketId,
+            CancellationToken cancellationToken
+        );
 
         // PAGED FUNCTION BLOCK
         Task<IReadOnlyCollection<Ticket>> ListAsync(
@@ -42,7 +56,10 @@ namespace SIGTI.Application.Common.Interfaces.Persistence
             CancellationToken cancellationToken
         );
 
-        Task<int> CountAsync(TicketListFilter filter, CancellationToken cancellationToken);
+        Task<int> CountAsync(
+            TicketListFilter filter,
+            CancellationToken cancellationToken
+        );
 
         // END PAGED FUNCTION BLOCK
     }

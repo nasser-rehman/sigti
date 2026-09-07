@@ -8,40 +8,24 @@ namespace SIGTI.Application.Services.TicketAssignment
 {
     public class LowestUtilizationStrategy : ITicketAssignmentStrategy
     {
-        public SupportQueueMember SelectTechnician(SupportQueue queue, IReadOnlyCollection<Ticket> activeTickets)
+        public SupportQueueMember SelectTechnician(
+            SupportQueue queue,
+            IReadOnlyDictionary<Guid, int> activeWorkloads
+        )
         {
-            var activeMembers = queue.Members.Where(m => m.IsActive).ToList();
-
-            if (!activeMembers.Any())
-                throw new DomainException("A fila não possui técnicos ativos.");
-
-            var workloads = activeMembers.Select(member =>
-            {
-                var currentTickets = activeTickets.Count(ticket => ticket.CurrentAssignment?.TechnicianId == member.TechnicianId);
-                var utilization = CalculateUtilization(currentTickets, member.MaxConcurrentTickets);
-
-                return new
-                {
-                    Member = member,
-                    CurrentTickets = currentTickets,
-                    Utilization = utilization
-                };
-            });
-
-            var availableMembers = workloads.Where(x => x.CurrentTickets < x.Member.MaxConcurrentTickets).ToList();
+            var availableMembers = queue
+                .Members.Where(m => m.IsActive)
+                .ToList();
 
             if (!availableMembers.Any())
-                throw new DomainException("Nenhum técnico disponível na fila");
+                throw new DomainException("A fila não possui técnicos ativos.");
 
-            var selected = availableMembers.OrderBy(x => x.Utilization).ThenBy(x => x.Member.JoinedAt).First();
-
-            return selected.Member;
+            return availableMembers
+                .OrderBy(m =>
+                    activeWorkloads.GetValueOrDefault(m.TechnicianId, 0)
+                )
+                .ThenBy(m => m.CreatedAt)
+                .FirstOrDefault();
         }
-
-        private static double CalculateUtilization(int currentTickets, int MaxConcurrentTickets)
-        {
-            return (double)currentTickets / MaxConcurrentTickets;
-        }
-
     }
 }

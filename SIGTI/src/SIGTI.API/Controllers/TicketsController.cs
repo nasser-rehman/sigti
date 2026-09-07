@@ -7,6 +7,7 @@ using SIGTI.Application.Features.Tickets.Commands.CreateTicket;
 using SIGTI.Application.Features.Tickets.Commands.DispatchTicket;
 using SIGTI.Application.Features.Tickets.Commands.ResolveTicket;
 using SIGTI.Application.Features.Tickets.Commands.StartTicketService;
+using SIGTI.Application.Features.Tickets.Commands.TransferTicket;
 using SIGTI.Application.Features.Tickets.Queries.GetTicketById;
 using SIGTI.Application.Features.Tickets.Queries.ListTicketComments;
 using SIGTI.Application.Features.Tickets.Queries.ListTickets;
@@ -147,6 +148,26 @@ namespace SIGTI.API.Controllers
                 new ListTicketCommentsQuery(id),
                 cancellationToken
             );
+
+            return Ok(response);
+        }
+
+        [HttpPatch("{id:guid/transfer}")]
+        public async Task<IActionResult> Transfer(
+            [FromRoute] Guid id,
+            [FromBody] TransferTicketRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            var command = new TransferTicketCommand(
+                id,
+                request.TargetQueueId,
+                request.TargetTechnicianId,
+                request.TransferredById,
+                request.Reason
+            );
+
+            var response = await _sender.Send(command, cancellationToken);
 
             return Ok(response);
         }

@@ -4,6 +4,9 @@ namespace SIGTI.Domain.Interfaces.Services
 {
     public interface ITicketAssignmentStrategy
     {
-        SupportQueueMember SelectTechnician(SupportQueue queue, IReadOnlyCollection<Ticket> activeTickets);
+        SupportQueueMember SelectTechnician(
+            SupportQueue queue,
+            IReadOnlyDictionary<Guid, int> activeWorkloads
+        );
     }
 }

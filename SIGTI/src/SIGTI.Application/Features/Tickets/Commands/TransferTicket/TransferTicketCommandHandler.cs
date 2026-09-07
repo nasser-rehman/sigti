@@ -5,19 +5,20 @@ using SIGTI.Application.Common.Interfaces.Services;
 using SIGTI.Application.Features.Tickets.Queries.ListTickets;
 using SIGTI.Domain.Entities;
 using SIGTI.Domain.Enums;
+using SIGTI.Domain.Exceptions;
 using SIGTI.Domain.Interfaces.Services;
 
-namespace SIGTI.Application.Features.Tickets.Commands.DispatchTicket
+namespace SIGTI.Application.Features.Tickets.Commands.TransferTicket
 {
-    public sealed class DispatchTicketHandler
-        : IRequestHandler<DispatchTicketCommand, DispatchTicketResponse>
+    public class TransferTicketCommandHandler
+        : IRequestHandler<TransferTicketCommand, TransferTicketResponse>
     {
         private readonly IEntityReferenceService _entityReferenceService;
         private readonly ITicketRepository _ticketRepository;
         private readonly ITicketAssignmentStrategy _assignmentStrategy;
         private readonly IUnitOfWork _unitOfWork;
 
-        public DispatchTicketHandler(
+        public TransferTicketCommandHandler(
             IEntityReferenceService entityReferenceService,
             ITicketRepository ticketRepository,
             ITicketAssignmentStrategy assignmentStrategy,
@@ -30,54 +31,58 @@ namespace SIGTI.Application.Features.Tickets.Commands.DispatchTicket
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<DispatchTicketResponse> Handle(
-            DispatchTicketCommand request,
+        public async Task<TransferTicketResponse> Handle(
+            TransferTicketCommand request,
             CancellationToken cancellationToken
         )
         {
-            // Search for required entities
             var ticket = await _entityReferenceService.GetRequiredTicketAsync(
                 request.TicketId,
                 cancellationToken
             );
-            var assignedBy = await _entityReferenceService.GetRequiredUserAsync(
-                request.AssignedById,
-                cancellationToken
-            );
-
-            User technician;
-            string reason = !string.IsNullOrWhiteSpace(request.Reason)
-                ? request.Reason
-                : (
-                    request.TechnicianId.HasValue
-                        ? "Atribuição Manual de técnico"
-                        : "Atribuição automática pela fila de atendimento"
+            var transferredBy =
+                await _entityReferenceService.GetRequiredUserAsync(
+                    request.TransferredById,
+                    cancellationToken
                 );
 
-            if (request.TechnicianId.HasValue)
+            // 1. Resolve a fila de destino (ou mantém a fila atual caso a
+            // transferência seja só de técnico)
+            var targetQueueId = request.TargetQueueId ?? ticket.QueueId;
+            var targetQueue =
+                await _entityReferenceService.GetRequiredQueueAsync(
+                    targetQueueId,
+                    cancellationToken
+                );
+
+            // 2. Resolve o técnico: manual se informado, ou automático
+            User technician;
+            if (request.TargetTechnicianId.HasValue)
             {
                 technician = await _entityReferenceService.GetRequiredUserAsync(
-                    request.TechnicianId.Value,
+                    request.TargetTechnicianId.Value,
                     cancellationToken
                 );
             }
             else
             {
-                var queue = await _entityReferenceService.GetRequiredQueueAsync(
-                    ticket.QueueId,
-                    cancellationToken
-                );
-
                 var activeWorkloads =
                     await _ticketRepository.GetActiveTicketCountsByTechniciansAsync(
-                        queue.Id,
+                        targetQueue.Id,
                         cancellationToken
                     );
 
                 var selectedMember = _assignmentStrategy.SelectTechnician(
-                    queue,
+                    targetQueue,
                     activeWorkloads
                 );
+
+                if (selectedMember is null)
+                {
+                    throw new DomainException(
+                        "Não há técnicos disponíveis na  fila de destino para realizar o atendimento."
+                    );
+                }
 
                 technician =
                     selectedMember.Technician
@@ -87,17 +92,31 @@ namespace SIGTI.Application.Features.Tickets.Commands.DispatchTicket
                     );
             }
 
-            ticket.AssignTechnician(technician, assignedBy, reason);
+            ticket.TransferToQueue(
+                targetQueue,
+                technician,
+                transferredBy,
+                request.Reason
+            );
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var activeAssignment = ticket.Assignments.Last(a => !a.IsFinished);
+            var activeAssignment =
+                ticket.CurrentAssignment
+                ?? throw new InvalidOperationException(
+                    "O ticket transferido deve possuir uma atribuição ativa."
+                );
 
-            return new DispatchTicketResponse(
+            return new TransferTicketResponse(
                 ticket.Id,
+                ticket.Number,
+                ticket.Code,
+                ticket.QueueId,
+                targetQueue.Name,
                 technician.Id,
                 technician.Name,
-                ticket.Status,
+                request.Reason,
+                ticket.Status.ToString(),
                 activeAssignment.AssignedAt
             );
         }

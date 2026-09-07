@@ -47,7 +47,8 @@ namespace SIGTI.Domain.Entities
         public IReadOnlyCollection<Comment> Comments => _comments;
 
         private readonly List<TicketAssignment> _assignments = [];
-        public IReadOnlyCollection<TicketAssignment> Assignments => _assignments;
+        public IReadOnlyCollection<TicketAssignment> Assignments =>
+            _assignments;
 
         public TicketAssignment? CurrentAssignment =>
             _assignments.FirstOrDefault(x => x.FinishedAt == null);
@@ -79,7 +80,7 @@ namespace SIGTI.Domain.Entities
 
             SetCreatedBy(createdBy);
 
-            TransferToQueue(queue);
+            SetQueue(queue);
 
             Status = TicketStatus.New;
         }
@@ -112,7 +113,9 @@ namespace SIGTI.Domain.Entities
         public void UpdateDescription(string description)
         {
             if (string.IsNullOrWhiteSpace(description))
-                throw new DomainException("A descrição do ticket é obrigatória.");
+                throw new DomainException(
+                    "A descrição do ticket é obrigatória."
+                );
 
             description = description.Trim();
             if (description.Length > MaxDescriptionLength)
@@ -157,7 +160,10 @@ namespace SIGTI.Domain.Entities
 
         public void Resolve()
         {
-            if (Status != TicketStatus.InProgress && Status != TicketStatus.WaitingCustomer)
+            if (
+                Status != TicketStatus.InProgress
+                && Status != TicketStatus.WaitingCustomer
+            )
                 throw new DomainException(
                     "O ticket deve estar em andamento ou aguardando o cliente para ser resolvido."
                 );
@@ -169,7 +175,9 @@ namespace SIGTI.Domain.Entities
         public void Close()
         {
             if (Status != TicketStatus.Resolved)
-                throw new DomainException("Somente tickets resolvidos podem ser fechados.");
+                throw new DomainException(
+                    "Somente tickets resolvidos podem ser fechados."
+                );
 
             Status = TicketStatus.Closed;
             ClosedAt = DateTime.UtcNow;
@@ -215,15 +223,51 @@ namespace SIGTI.Domain.Entities
             UpdateTimestamp();
         }
 
-        public void TransferToQueue(SupportQueue queue)
+        internal void SetQueue(SupportQueue queue)
         {
             if (queue is null)
-                throw new DomainException("A fila de suporte do ticket é obrigatória.");
+                throw new DomainException(
+                    "A fila de suporte do ticket é obrigatória."
+                );
             if (!queue.IsActive)
-                throw new DomainException("A fila de suporte do ticket deve estar ativa.");
+                throw new DomainException(
+                    "A fila de suporte do ticket deve estar ativa."
+                );
             Queue = queue;
             QueueId = queue.Id;
             UpdateTimestamp();
+        }
+
+        public void TransferToQueue(
+            SupportQueue targetQueue,
+            User newTechnician,
+            User transferredBy,
+            string reason
+        )
+        {
+            if (
+                Status == TicketStatus.Closed
+                || Status == TicketStatus.Resolved
+            )
+                throw new DomainException(
+                    "Não é possível transferir tickets resolvidos ou fechados."
+                );
+
+            if (newTechnician is null)
+                throw new DomainException("O técnico é obrigatório.");
+
+            if (transferredBy is null)
+                throw new DomainException(
+                    "O usuário responsável pela transferência é obrigatório."
+                );
+
+            if (string.IsNullOrWhiteSpace(reason))
+                throw new DomainException(
+                    "O motivo da transferência é obrigatório."
+                );
+
+            SetQueue(targetQueue);
+            AssignTechnician(newTechnician, transferredBy, reason);
         }
 
         public void AddComment(Comment comment)
@@ -238,20 +282,35 @@ namespace SIGTI.Domain.Entities
             UpdateTimestamp();
         }
 
-        public void AssignTechnician(User technician, User assignedBy, string reason)
+        public void AssignTechnician(
+            User technician,
+            User assignedBy,
+            string reason
+        )
         {
             if (technician is null)
                 throw new DomainException("O técnico é obrigatório.");
             if (assignedBy is null)
-                throw new DomainException("O usuário que atribuiu o técnico é obrigatório.");
+                throw new DomainException(
+                    "O usuário que atribuiu o técnico é obrigatório."
+                );
             if (string.IsNullOrWhiteSpace(reason))
-                throw new DomainException("A razão da atribuição é obrigatória.");
+                throw new DomainException(
+                    "A razão da atribuição é obrigatória."
+                );
             if (Status == TicketStatus.Closed)
-                throw new DomainException("Não é possível atribuir técnicos a tickets fechados.");
+                throw new DomainException(
+                    "Não é possível atribuir técnicos a tickets fechados."
+                );
 
             CurrentAssignment?.MarkAsFinished();
 
-            var assignment = new TicketAssignment(this, technician, assignedBy, reason);
+            var assignment = new TicketAssignment(
+                this,
+                technician,
+                assignedBy,
+                reason
+            );
 
             _assignments.Add(assignment);
 

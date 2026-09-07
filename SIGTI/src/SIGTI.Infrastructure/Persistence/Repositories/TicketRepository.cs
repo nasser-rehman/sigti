@@ -18,12 +18,18 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
             _context = context;
         }
 
-        public async Task AddAsync(Ticket ticket, CancellationToken cancellationToken)
+        public async Task AddAsync(
+            Ticket ticket,
+            CancellationToken cancellationToken
+        )
         {
             await _context.Tickets.AddAsync(ticket, cancellationToken);
         }
 
-        public async Task<Ticket?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Ticket?> GetByIdAsync(
+            Guid id,
+            CancellationToken cancellationToken
+        )
         {
             return await _context
                 .Tickets.Include(ticket => ticket.Department)
@@ -35,10 +41,16 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
                     .ThenInclude(assignment => assignment.Technician)
                 .Include(ticket => ticket.Assignments)
                     .ThenInclude(assignment => assignment.AssignedBy)
-                .FirstOrDefaultAsync(ticket => ticket.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(
+                    ticket => ticket.Id == id,
+                    cancellationToken
+                );
         }
 
-        public async Task<Ticket?> GetByNumberAsync(int number, CancellationToken cancellationToken)
+        public async Task<Ticket?> GetByNumberAsync(
+            int number,
+            CancellationToken cancellationToken
+        )
         {
             return await _context.Tickets.FirstOrDefaultAsync(
                 ticket => ticket.Number == number,
@@ -46,7 +58,9 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
             );
         }
 
-        public async Task<IReadOnlyCollection<Ticket>> ListAssignedToTechnicianAsync(
+        public async Task<
+            IReadOnlyCollection<Ticket>
+        > ListAssignedToTechnicianAsync(
             Guid technicianId,
             CancellationToken cancellationToken
         )
@@ -55,7 +69,8 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
                 .Tickets.AsNoTracking()
                 .Where(ticket =>
                     ticket.Assignments.Any(assignment =>
-                        assignment.TechnicianId == technicianId && assignment.FinishedAt == null
+                        assignment.TechnicianId == technicianId
+                        && assignment.FinishedAt == null
                     )
                 )
                 .OrderByDescending(ticket => ticket.CreatedAt)
@@ -95,6 +110,36 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
             return tickets;
         }
 
+        public async Task<
+            Dictionary<Guid, int>
+        > GetActiveTicketCountsByTechniciansAsync(
+            Guid queueId,
+            CancellationToken cancellationToken
+        )
+        {
+            var activeStatuses = new[]
+            {
+                TicketStatus.Assigned,
+                TicketStatus.InProgress,
+                TicketStatus.WaitingCustomer,
+            };
+
+            return await _context
+                .Tickets.Where(ticket =>
+                    ticket.QueueId == queueId
+                    && activeStatuses.Contains(ticket.Status)
+                )
+                .SelectMany(ticket => ticket.Assignments)
+                .Where(assignment => assignment.FinishedAt == null)
+                .GroupBy(assignment => assignment.TechnicianId)
+                .Select(g => new { TechnicianId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(
+                    x => x.TechnicianId,
+                    x => x.Count,
+                    cancellationToken
+                );
+        }
+
         public async Task<Ticket?> GetDetailsByIdAsync(
             Guid ticketId,
             CancellationToken cancellationToken
@@ -107,7 +152,10 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
                 .Include(ticket => ticket.CreatedBy)
                 .Include(ticket => ticket.Assignments)
                     .ThenInclude(assignment => assignment.Technician)
-                .FirstOrDefaultAsync(ticket => ticket.Id == ticketId, cancellationToken);
+                .FirstOrDefaultAsync(
+                    ticket => ticket.Id == ticketId,
+                    cancellationToken
+                );
         }
 
         // ----------- Paged Functions Block -----------
@@ -124,27 +172,37 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
 
             if (filter.Status.HasValue)
             {
-                query = query.Where(ticket => ticket.Status == filter.Status.Value);
+                query = query.Where(ticket =>
+                    ticket.Status == filter.Status.Value
+                );
             }
 
             if (filter.Priority.HasValue)
             {
-                query = query.Where(ticket => ticket.Priority == filter.Priority.Value);
+                query = query.Where(ticket =>
+                    ticket.Priority == filter.Priority.Value
+                );
             }
 
             if (filter.Category.HasValue)
             {
-                query = query.Where(ticket => ticket.Category == filter.Category.Value);
+                query = query.Where(ticket =>
+                    ticket.Category == filter.Category.Value
+                );
             }
 
             if (filter.DepartmentId.HasValue)
             {
-                query = query.Where(ticket => ticket.DepartmentId == filter.DepartmentId.Value);
+                query = query.Where(ticket =>
+                    ticket.DepartmentId == filter.DepartmentId.Value
+                );
             }
 
             if (filter.QueueId.HasValue)
             {
-                query = query.Where(ticket => ticket.QueueId == filter.QueueId.Value);
+                query = query.Where(ticket =>
+                    ticket.QueueId == filter.QueueId.Value
+                );
             }
 
             if (filter.TechnicianId.HasValue)
@@ -178,27 +236,37 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
 
             if (filter.Status.HasValue)
             {
-                query = query.Where(ticket => ticket.Status == filter.Status.Value);
+                query = query.Where(ticket =>
+                    ticket.Status == filter.Status.Value
+                );
             }
 
             if (filter.Priority.HasValue)
             {
-                query = query.Where(ticket => ticket.Priority == filter.Priority.Value);
+                query = query.Where(ticket =>
+                    ticket.Priority == filter.Priority.Value
+                );
             }
 
             if (filter.Category.HasValue)
             {
-                query = query.Where(ticket => ticket.Category == filter.Category.Value);
+                query = query.Where(ticket =>
+                    ticket.Category == filter.Category.Value
+                );
             }
 
             if (filter.DepartmentId.HasValue)
             {
-                query = query.Where(ticket => ticket.DepartmentId == filter.DepartmentId.Value);
+                query = query.Where(ticket =>
+                    ticket.DepartmentId == filter.DepartmentId.Value
+                );
             }
 
             if (filter.QueueId.HasValue)
             {
-                query = query.Where(ticket => ticket.QueueId == filter.QueueId.Value);
+                query = query.Where(ticket =>
+                    ticket.QueueId == filter.QueueId.Value
+                );
             }
 
             if (filter.TechnicianId.HasValue)
@@ -223,7 +291,8 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
         {
             return sortBy switch
             {
-                TicketSortField.Number => sortDirection == SortDirection.Ascending
+                TicketSortField.Number => sortDirection
+                == SortDirection.Ascending
                     ? query
                         .OrderBy(ticket => ticket.Number)
                         .ThenByDescending(ticket => ticket.CreatedAt)
@@ -231,7 +300,8 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
                         .OrderByDescending(ticket => ticket.Number)
                         .ThenByDescending(ticket => ticket.CreatedAt),
 
-                TicketSortField.Priority => sortDirection == SortDirection.Ascending
+                TicketSortField.Priority => sortDirection
+                == SortDirection.Ascending
                     ? query
                         .OrderBy(ticket => ticket.Priority)
                         .ThenByDescending(ticket => ticket.Number)
@@ -240,7 +310,9 @@ namespace SIGTI.Infrastructure.Persistence.Repositories
                         .ThenByDescending(ticket => ticket.Number),
 
                 _ => sortDirection == SortDirection.Ascending
-                    ? query.OrderBy(ticket => ticket.CreatedAt).ThenBy(ticket => ticket.Number)
+                    ? query
+                        .OrderBy(ticket => ticket.CreatedAt)
+                        .ThenBy(ticket => ticket.Number)
                     : query
                         .OrderByDescending(ticket => ticket.CreatedAt)
                         .ThenByDescending(ticket => ticket.Number),
