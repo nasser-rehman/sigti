@@ -79,12 +79,15 @@ Commands (Escrita)
 ├── CreateTicketCommand
 ├── DispatchTicketCommand
 ├── StartTicketServiceCommand
+├── TransferTicketCommand
+├── AddCommentCommand
 ├── ResolveTicketCommand
 └── CloseTicketCommand
 
 Queries (Leitura)
 ├── GetTicketByIdQuery
-└── ListTicketsQuery
+├── ListTicketsQuery
+└── ListTicketsCommentsQuery
 ```
 
 A camada também contém:
@@ -174,6 +177,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - `PATCH /api/tickets/{id}/start` - Início do atendimento (`InProgress`)
 - `PATCH /api/tickets/{id}/resolve` - Resolução técnica (`Resolved`)
 - `PATCH /api/tickets/{id}/close` - Fechamento terminal (`Closed`)
+- `PATCH /api/tickets/{id}/transfer` - Transferência de fila e/ou técnico
+- `POST /api/tickets/{id}/comments` - Adição de comentário ao chamado
+- `GET /api/tickets/{id}/comments` - Listagem cronológica dos comentários
 
 ---
 
@@ -195,6 +201,9 @@ O ciclo de vida do chamado segue uma máquina de estados finita e estrita, centr
 - [x] Controle de prioridade e categoria;
 - [x] Histórico completo de atribuições;
 - [x] Comentários no domínio.
+- [x] Adicionar comentários ao chamado (`AddCommentCommand`);
+- [x] Listar comentários do chamado em ordem cronológica (`ListTicketCommentsQuery`);
+- [x] Transferir ticket entre filas e técnicos (`TransferTicketCommand`);
 
 ### Infraestrutura
 - [x] Entity Framework Core & PostgreSQL (Npgsql);
@@ -303,8 +312,8 @@ Na inicialização da aplicação, o `DatabaseSeeder` injeta dados essenciais pa
 - [x] Resolver ticket;
 - [x] Fechar ticket;
 - [x] Testes de Integração (Repositórios e Infraestrutura);
-- [ ] Adicionar comentários ao chamado (`AddCommentCommand`);
-- [ ] Transferir ticket entre filas/departamentos (`TransferTicketCommand`);
+- [x] Adicionar comentários ao chamado (`AddCommentCommand`);
+- [x] Transferir ticket entre filas/departamentos (`TransferTicketCommand`);
 - [ ] Histórico/Auditoria completa do ticket;
 - [ ] Autenticação e Autorização (JWT);
 - [ ] Gestão completa de Usuários, Departamentos e Filas;
