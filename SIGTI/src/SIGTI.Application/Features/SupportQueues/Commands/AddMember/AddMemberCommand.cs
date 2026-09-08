@@ -5,6 +5,6 @@ namespace SIGTI.Application.Features.SupportQueues.Commands.AddMember
     public sealed record AddMemberCommand(
         Guid QueueId,
         Guid TechnicianId,
-int MaxConcurrentTickets
+        int MaxConcurrentTickets
     ) : IRequest<AddMemberResponse>;
 }

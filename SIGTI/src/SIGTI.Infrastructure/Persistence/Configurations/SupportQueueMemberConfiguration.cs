@@ -4,13 +4,16 @@ using SIGTI.Domain.Entities;
 
 namespace SIGTI.Infrastructure.Persistence.Configurations
 {
-    public class SupportQueueMemberConfiguration : IEntityTypeConfiguration<SupportQueueMember>
+    public class SupportQueueMemberConfiguration
+        : IEntityTypeConfiguration<SupportQueueMember>
     {
         public void Configure(EntityTypeBuilder<SupportQueueMember> builder)
         {
             builder.ToTable("SupportQueueMembers");
 
             builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.Id).ValueGeneratedNever();
 
             builder.Property(x => x.IsActive).IsRequired();
 
@@ -37,7 +40,9 @@ namespace SIGTI.Infrastructure.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasIndex(x => x.IsActive);
-            builder.HasIndex(x => new { x.SupportQueueId, x.TechnicianId }).IsUnique();
+            builder
+                .HasIndex(x => new { x.SupportQueueId, x.TechnicianId })
+                .IsUnique();
         }
     }
 }
